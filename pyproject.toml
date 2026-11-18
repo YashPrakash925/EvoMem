@@ -18,6 +18,10 @@ dev = [
   "python-dotenv",
   "pytest>=8,<9",
 ]
+benchmark = [
+  "datasets>=3,<5",
+  "swebench",
+]
 
 [project.scripts]
 evomem = "evomem.cli:main"

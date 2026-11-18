@@ -1,0 +1,35 @@
+diff --git a/astropy/io/fits/fitsrec.py b/astropy/io/fits/fitsrec.py
+index 574b4073b..de5f93ebd 100755
+--- a/astropy/io/fits/fitsrec.py
++++ b/astropy/io/fits/fitsrec.py
+@@ -1261,7 +1261,7 @@ class FITS_rec(np.recarray):
+ 
+         # Replace exponent separator in floating point numbers
+         if 'D' in format:
+-            output_field.replace(encode_ascii('E'), encode_ascii('D'))
++            output_field[:] = np.char.replace(output_field, encode_ascii('E'), encode_ascii('D'))
+ 
+ 
+ def _get_recarray_field(array, key):
+diff --git a/astropy/io/fits/tests/test_table.py b/astropy/io/fits/tests/test_table.py
+index 67fe21aa7..d2c3ed0c0 100755
+--- a/astropy/io/fits/tests/test_table.py
++++ b/astropy/io/fits/tests/test_table.py
+@@ -2822,6 +2822,17 @@ class TestColumnFunctions(FitsTestCase):
+         c = fits.Column('TEST', 'D', ascii=True)
+         assert c.format == 'D25.17'
+ 
++    def test_d_exponent_format(self):
++        c = fits.Column('TEST', 'D15.7', array=[1.23e-10])
++        hdu = fits.TableHDU.from_columns([c])
++        path = self.temp('test_d_exponent.fits')
++        hdu.writeto(path)
++
++        with open(path, 'rb') as fd:
++            assert b'D-10' in fd.read()
++
++        with fits.open(path) as hdul:
++            assert np.isclose(hdul[1].data['TEST'][0], 1.23e-10)
+     def test_zero_precision_float_column(self):
+         """
+         Regression test for https://github.com/astropy/astropy/issues/3422

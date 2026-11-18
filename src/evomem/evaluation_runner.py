@@ -14,6 +14,9 @@ class EvaluationTask:
     repository: str
     order: int
     language: str | None = None
+    base_commit: str | None = None
+    task_prompt: str | None = None
+    image: str | None = None
 
 @dataclass(frozen=True)
 class EvaluationPlanItem:
@@ -23,6 +26,9 @@ class EvaluationPlanItem:
     condition: str
     eligible_prior_task_ids: list[str]
     language: str | None = None
+    base_commit: str | None = None
+    task_prompt: str | None = None
+    image: str | None = None
 
 @dataclass(frozen=True)
 class EvaluationRecord:
@@ -60,14 +66,17 @@ def build_plan(tasks: list[EvaluationTask]) -> list[EvaluationPlanItem]:
         eligible = [item.task_id for item in tasks if item.repository == task.repository and item.order < task.order]
         for condition in CONDITIONS:
             # The no-memory arm never gets a memory, even if prior tasks exist.
-            plan.append(EvaluationPlanItem(task.task_id, task.repository, task.order, condition, [] if condition == "no_memory" else eligible, task.language))
+            plan.append(EvaluationPlanItem(task.task_id, task.repository, task.order, condition,
+                                           [] if condition == "no_memory" else eligible, task.language,
+                                           task.base_commit, task.task_prompt, task.image))
     return plan
 
 
 def write_manifest(plan: list[EvaluationPlanItem], output: str | Path, *, agent: str, model: str, seed: int | None, budget: dict) -> dict:
     """A frozen run specification; executing agents is deliberately an external adapter concern."""
     payload = {"schema_version": "1.0", "agent": agent, "model": model, "seed": seed, "budget": budget,
-               "runs": [asdict(item) for item in plan], "rules": {"same_agent_model_budget_per_condition": True, "chronological_memory_only": True}}
+               "runs": [asdict(item) for item in plan], "rules": {"same_agent_model_budget_per_condition": True,
+               "same_repository_prior_exposure_only": True, "seeded_exposure_order": seed is not None}}
     Path(output).parent.mkdir(parents=True, exist_ok=True)
     Path(output).write_text(json.dumps(payload, indent=2), encoding="utf-8")
     return payload

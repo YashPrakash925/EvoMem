@@ -31,9 +31,11 @@ that remains before making benchmark or production claims.
 
 ## What is not complete
 
-- There is no verified SWE-bench score yet. The local evaluator was blocked by
-  Docker Desktop resource/storage issues on Apple Silicon; this does not block
-  normal EvoMem integration.
+- There is no verified SWE-bench score yet. A SWE-bench Lite dataset planner,
+  per-run adapter, patch exporter, and official-harness grading command are
+  available, but the full experiment matrix has not been executed. The local
+  harness is resource intensive and its Docker setup must be confirmed before
+  a full run; this does not block normal EvoMem integration.
 - The default retrieval signal named `semantic_baseline` is reproducible token
   Dice overlap, not a learned embedding or a hosted vector database. The
   companion lexical Jaccard signal, language score, and validation score make

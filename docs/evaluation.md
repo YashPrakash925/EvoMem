@@ -15,6 +15,45 @@ Persist one record per completed run with task ID, condition, supplied memory ID
 
 `evomem.evaluation.rates` computes only metrics whose input labels exist. Missing labels remain `null`, rather than silently becoming failures. This repository includes no benchmark results and makes no performance claim.
 
+## SWE-bench Lite adapter
+
+EvoMem can create the five-condition plan from the official SWE-bench Lite test split, run one planned issue/condition through the existing OpenHands sandbox boundary, export captured patches in the official prediction JSONL format, and delegate grading to the SWE-bench Docker harness. This integration does not itself run all 1,500 agent calls or admit memories automatically.
+
+Install optional dependencies and create a plan. The default plan contains the 300 Lite tasks and 1,500 condition runs; `--instance-id` can be repeated for a small smoke run. The seed freezes a reproducible task exposure order, and each task only lists earlier tasks from the same repository as eligible memory sources.
+
+```powershell
+python -m pip install -e '.[benchmark,agent]'
+evomem swebench-plan --output-dir artifacts/swebench-lite --model gemini-3.5-flash-lite --seed 7
+
+# Small setup check
+evomem swebench-plan --output-dir artifacts/swebench-smoke --model gemini-3.5-flash-lite `
+  --instance-id sympy__sympy-20590
+```
+
+The generated `tasks.json` and `run-manifest.json` contain issue prompts, base commits, and task image names, but omit gold patches and test labels. For each run, create a clean disposable checkout at the exact `base_commit`. `swebench-run` verifies both the commit and clean checkout, selects the task image from the manifest (or `--image`), and prepares the normal condition-specific request; execution remains opt-in:
+
+```powershell
+evomem swebench-run --manifest artifacts/swebench-lite/run-manifest.json `
+  --task-id sympy__sympy-20590 --condition no_memory `
+  --repo C:\work\sympy-20590 --memory-store artifacts\stores\no-memory `
+  --output-dir artifacts\swebench-lite\runs\sympy__sympy-20590\no_memory `
+  --model gemini-3.5-flash-lite --execute
+```
+
+The runner saves `model_patch.diff` beside request, trajectory, and outcome artifacts. Run planned tasks in seeded exposure order. For every admitted memory, tag its source task using `evomem pipeline --trajectory <run-dir>/trajectory.json --task-id <instance-id> --snapshot-root <clean-base-checkout> --store <condition-store>`. Add `--candidate-only` only when deliberately creating an unvalidated record in an isolated candidate store. At injection time EvoMem filters each memory condition to source task IDs listed as eligible earlier exposures for the same repository; missing source IDs are excluded. Only validated memories can be used in the validated conditions. The `validated_semantic` condition currently uses EvoMem's documented deterministic semantic baseline, not learned embeddings.
+
+After collecting per-task runs, export predictions and grade them with the official harness:
+
+```powershell
+evomem swebench-predictions --run-root artifacts/swebench-lite/runs `
+  --condition no_memory --model gemini-3.5-flash-lite `
+  --output artifacts/swebench-lite/predictions/no_memory.jsonl
+evomem swebench-grade --predictions artifacts/swebench-lite/predictions/no_memory.jsonl `
+  --run-id evomem-lite-no-memory --workers 1
+```
+
+The harness is Docker intensive. Start with one instance and one worker, confirm the report, and check available disk before scaling. The full Lite harness is documented as requiring roughly 120 GB free storage and 16 GB RAM; ARM execution remains experimental. See the [official SWE-bench harness guide](https://github.com/SWE-bench/SWE-bench/blob/main/docs/reference/harness.md) and [Lite dataset card](https://huggingface.co/datasets/SWE-bench/SWE-bench_Lite) for current details.
+
 ## Agent integration boundary
 
 `evomem openhands-health` checks whether the optional OpenHands SDK can load. EvoMem prepares serializable, condition-specific requests before opt-in execution, keeping evaluation planning testable without an agent runtime. The `no_memory` request forcibly strips all memories.

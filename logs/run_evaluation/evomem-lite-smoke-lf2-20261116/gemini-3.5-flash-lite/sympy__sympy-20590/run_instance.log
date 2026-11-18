@@ -1,0 +1,77 @@
+2026-11-16 14:24:21,101 - INFO - Creating container for sympy__sympy-20590...
+2026-11-16 14:24:21,169 - INFO - Container for sympy__sympy-20590 created: 6b6318487400128a17bbca77cd9b6523610ce4d10b550516aa2aa2a1668084ab
+2026-11-16 14:24:21,344 - INFO - Container for sympy__sympy-20590 started: 6b6318487400128a17bbca77cd9b6523610ce4d10b550516aa2aa2a1668084ab
+2026-11-16 14:24:21,345 - INFO - Intermediate patch for sympy__sympy-20590 written to logs\run_evaluation\evomem-lite-smoke-lf2-20261116\gemini-3.5-flash-lite\sympy__sympy-20590\patch.diff, now applying to container...
+2026-11-16 14:24:21,481 - INFO - Failed to apply patch to container: git apply --verbose
+2026-11-16 14:24:22,070 - INFO - Failed to apply patch to container: git apply --verbose --3way
+2026-11-16 14:24:22,356 - INFO - Failed to apply patch to container: git apply --verbose --reject
+2026-11-16 14:24:22,466 - INFO - >>>>> Applied Patch:
+(Stripping trailing CRs from patch; use --binary to disable.)
+patching file sympy/core/_print_helpers.py
+(Stripping trailing CRs from patch; use --binary to disable.)
+patching file sympy/core/tests/test_symbol.py
+
+2026-11-16 14:24:22,517 - INFO - Git diff before:
+diff --git a/sympy/core/_print_helpers.py b/sympy/core/_print_helpers.py
+index 96d7e72676..b72e022e68 100755
+--- a/sympy/core/_print_helpers.py
++++ b/sympy/core/_print_helpers.py
+@@ -6,6 +6,7 @@
+ """
+ 
+ class Printable:
++    __slots__ = ()
+     """
+     The default implementation of printing for SymPy classes.
+ 
+diff --git a/sympy/core/tests/test_symbol.py b/sympy/core/tests/test_symbol.py
+index a07a1d2f36..224de5c653 100755
+--- a/sympy/core/tests/test_symbol.py
++++ b/sympy/core/tests/test_symbol.py
+@@ -387,3 +387,9 @@ def test_disambiguate():
+     assert disambiguate(*t7) == (y*y_1, y_1)
+     assert disambiguate(Dummy('x_1'), Dummy('x_1')
+         ) == (x_1, Symbol('x_1_1'))
++
++
++def test_symbol_no_dict():
++    s = Symbol('s')
++    assert not hasattr(s, '__dict__')
++    raises(AttributeError, lambda: s.__dict__)
+2026-11-16 14:24:22,518 - INFO - Eval script for sympy__sympy-20590 written to logs\run_evaluation\evomem-lite-smoke-lf2-20261116\gemini-3.5-flash-lite\sympy__sympy-20590\eval.sh; copying to container...
+2026-11-16 14:24:24,097 - INFO - Test runtime: 1.51 seconds
+2026-11-16 14:24:24,097 - INFO - Test output for sympy__sympy-20590 written to logs\run_evaluation\evomem-lite-smoke-lf2-20261116\gemini-3.5-flash-lite\sympy__sympy-20590\test_output.txt
+2026-11-16 14:24:24,145 - INFO - Git diff after:
+diff --git a/sympy/core/_print_helpers.py b/sympy/core/_print_helpers.py
+index 96d7e72676..b72e022e68 100755
+--- a/sympy/core/_print_helpers.py
++++ b/sympy/core/_print_helpers.py
+@@ -6,6 +6,7 @@
+ """
+ 
+ class Printable:
++    __slots__ = ()
+     """
+     The default implementation of printing for SymPy classes.
+ 
+diff --git a/sympy/core/tests/test_symbol.py b/sympy/core/tests/test_symbol.py
+index a07a1d2f36..224de5c653 100755
+--- a/sympy/core/tests/test_symbol.py
++++ b/sympy/core/tests/test_symbol.py
+@@ -387,3 +387,9 @@ def test_disambiguate():
+     assert disambiguate(*t7) == (y*y_1, y_1)
+     assert disambiguate(Dummy('x_1'), Dummy('x_1')
+         ) == (x_1, Symbol('x_1_1'))
++
++
++def test_symbol_no_dict():
++    s = Symbol('s')
++    assert not hasattr(s, '__dict__')
++    raises(AttributeError, lambda: s.__dict__)
+2026-11-16 14:24:24,145 - INFO - Grading answer for sympy__sympy-20590...
+2026-11-16 14:24:24,147 - INFO - report: {'sympy__sympy-20590': {'patch_is_None': False, 'patch_exists': True, 'patch_successfully_applied': True, 'resolved': False, 'infra_failure': False, 'tests_status': {'FAIL_TO_PASS': {'success': [], 'failure': ['test_immutable']}, 'PASS_TO_PASS': {'success': [], 'failure': ['test__aresame', 'test_structure', 'test_equality', 'test_matches_basic', 'test_has', 'test_subs', 'test_subs_with_unicode_symbols', 'test_atoms', 'test_free_symbols_empty', 'test_doit', 'test_S', 'test_xreplace', 'test_preorder_traversal', 'test_sorted_args', 'test_call', 'test_rewrite', 'test_literal_evalf_is_number_is_zero_is_comparable', 'test_as_Basic', 'test_atomic', 'test_as_dummy', 'test_canonical_variables']}, 'FAIL_TO_FAIL': {'success': [], 'failure': []}, 'PASS_TO_FAIL': {'success': [], 'failure': []}}}}
+Result for sympy__sympy-20590: resolved: False
+2026-11-16 14:24:24,147 - INFO - Attempting to stop container sweb.eval.sympy__sympy-20590.evomem-lite-smoke-lf2-20261116...
+2026-11-16 14:24:39,476 - INFO - Container sweb.eval.sympy__sympy-20590.evomem-lite-smoke-lf2-20261116 stopped successfully.
+2026-11-16 14:24:39,476 - INFO - Attempting to remove container sweb.eval.sympy__sympy-20590.evomem-lite-smoke-lf2-20261116...
+2026-11-16 14:24:39,583 - INFO - Container sweb.eval.sympy__sympy-20590.evomem-lite-smoke-lf2-20261116 removed successfully.

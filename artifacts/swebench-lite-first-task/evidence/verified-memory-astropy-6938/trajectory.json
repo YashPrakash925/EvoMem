@@ -1,0 +1,22 @@
+[
+  {
+    "kind": "MessageEvent",
+    "content": "Possible bug in io.fits related to D exponents: for FITS ASCII columns with D format, replace E exponent separators with D. The np.chararray replace result must be written back to the output array."
+  },
+  {
+    "kind": "ActionEvent",
+    "action": "Patched astropy/io/fits/fitsrec.py so output_field[:] receives np.char.replace(output_field, encode_ascii('E'), encode_ascii('D')); added astropy/io/fits/tests/test_table.py regression coverage."
+  },
+  {
+    "kind": "ActionEvent",
+    "action": "Ran PYTHONPATH=/workspace /opt/miniconda3/envs/testbed/bin/python -m pytest -q astropy/io/fits/tests/test_table.py -k test_d_exponent_format."
+  },
+  {
+    "kind": "ObservationEvent",
+    "observation": "Regression test passed: 1 passed, 86 deselected. The generated D15.7 FITS data row contains D-10, and reading the table returns 1.23e-10."
+  },
+  {
+    "kind": "ObservationEvent",
+    "observation": "Official SWE-bench Lite grader resolved astropy__astropy-6938: 1 completed, 1 resolved, 0 unresolved, 0 errors."
+  }
+]

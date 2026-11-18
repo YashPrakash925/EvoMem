@@ -26,11 +26,15 @@ def memory_context(task: str, store: str, language: str | None = None, *, task_i
             "abstained": not accepted}
 
 
-def condition_memory_context(condition: str, task: str, store: str, language: str | None = None, *, task_id: str | None = None, current_context: dict | None = None) -> dict:
+def condition_memory_context(condition: str, task: str, store: str, language: str | None = None, *, task_id: str | None = None, current_context: dict | None = None, eligible_prior_task_ids: list[str] | None = None) -> dict:
     """Create an ablation-specific context from a store pre-filtered by the manifest runner."""
     if condition == "no_memory":
         return {"task_id": task_id, "task": task, "accepted_memories": [], "decision_log": [], "abstained": True}
-    candidates = retrieve(task, MemoryRepository(store).list(), language)
+    records = MemoryRepository(store).list()
+    if eligible_prior_task_ids is not None:
+        allowed_sources = set(eligible_prior_task_ids)
+        records = [record for record in records if record.provenance.get("task_id") in allowed_sources]
+    candidates = retrieve(task, records, language)
     if condition == "candidate_memory":
         selected = candidates
         reason = "Candidate-memory ablation; records are deliberately unvalidated."

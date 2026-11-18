@@ -1,0 +1,26 @@
+diff --git a/sympy/core/_print_helpers.py b/sympy/core/_print_helpers.py
+index 96d7e72..b72e022 100644
+--- a/sympy/core/_print_helpers.py
++++ b/sympy/core/_print_helpers.py
+@@ -6,6 +6,7 @@
+ """
+ 
+ class Printable:
++    __slots__ = ()
+     """
+     The default implementation of printing for SymPy classes.
+ 
+diff --git a/sympy/core/tests/test_symbol.py b/sympy/core/tests/test_symbol.py
+index a07a1d2..db2f69b 100644
+--- a/sympy/core/tests/test_symbol.py
++++ b/sympy/core/tests/test_symbol.py
+@@ -387,3 +387,9 @@ def test_disambiguate():
+     assert disambiguate(*t7) == (y*y_1, y_1)
+     assert disambiguate(Dummy('x_1'), Dummy('x_1')
+         ) == (x_1, Symbol('x_1_1'))
++
++
++def test_symbol_no_dict():
++    s = Symbol('s')
++    assert not hasattr(s, '__dict__')
++    raises(AttributeError, lambda: s.__dict__)

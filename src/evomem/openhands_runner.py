@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import subprocess
 import time
 from hashlib import sha256
 from dataclasses import asdict
@@ -13,6 +14,34 @@ from .openhands_adapter import OpenHandsRunRequest, build_request, health
 from .integration import memory_context
 from .providers import _load_project_environment
 from .repository_context import collect
+
+
+def _capture_model_patch(repository: str | Path, output_dir: str | Path) -> None:
+    """Save tracked changes and new UTF-8 text files for downstream graders."""
+    repo = Path(repository)
+    output = Path(output_dir) / "model_patch.diff"
+    tracked = subprocess.run(["git", "-C", str(repo), "diff", "--ignore-space-at-eol", "--binary", "HEAD"],
+                             capture_output=True, text=True, encoding="utf-8", errors="replace")
+    if tracked.returncode:
+        return
+    pieces = [tracked.stdout]
+    untracked = subprocess.run(["git", "-C", str(repo), "ls-files", "--others", "--exclude-standard"],
+                               capture_output=True, text=True, encoding="utf-8", errors="replace")
+    if untracked.returncode == 0:
+        for relative in untracked.stdout.splitlines():
+            path = repo / relative
+            try:
+                content = path.read_text(encoding="utf-8").splitlines(keepends=True)
+            except (OSError, UnicodeError):
+                continue
+            normalized = [line if line.endswith("\n") else line + "\n" for line in content]
+            pieces.extend([
+                f"diff --git a/{relative} b/{relative}\nnew file mode 100644\n",
+                "--- /dev/null\n", f"+++ b/{relative}\n",
+                f"@@ -0,0 +1,{len(normalized)} @@\n",
+                *["+" + line for line in normalized],
+            ])
+    output.write_text("".join(pieces), encoding="utf-8")
 
 
 def _find_run(manifest: dict[str, Any], task_id: str, condition: str) -> dict[str, Any]:
@@ -80,7 +109,9 @@ def prepare_run(manifest_path: str | Path, *, task_id: str, condition: str, task
     manifest = json.loads(Path(manifest_path).read_text(encoding="utf-8"))
     item = _find_run(manifest, task_id, condition)
     repo_context = collect(repository)
-    context = condition_memory_context(condition, task_prompt, str(memory_store), item.get("language"), task_id=task_id, current_context=repo_context)
+    context = condition_memory_context(condition, task_prompt, str(memory_store), item.get("language"), task_id=task_id,
+                                      current_context=repo_context,
+                                      eligible_prior_task_ids=item.get("eligible_prior_task_ids"))
     request = build_request(type("PlanItem", (), item)(), task_prompt, context, manifest.get("budget", {}))
     request["repository_path"] = str(Path(repository).resolve())
     request["repository_context"] = repo_context
@@ -148,6 +179,7 @@ def execute_prepared(
         outcome = {"status": "failed", "attempts": attempts, "task_id": request["task_id"], "condition": request["condition"],
                    "memory_ids": [item["memory_id"] for item in request["agent_context"]["accepted_memories"]], "gate_decisions": request["agent_context"]["decision_log"], "errors": errors}
     (out / "outcome.json").write_text(json.dumps(outcome, indent=2), encoding="utf-8")
+    _capture_model_patch(request["repository_path"], out)
     return outcome
 
 
@@ -235,4 +267,5 @@ def execute_sandboxed(
         outcome = {"status": "failed", "attempts": attempts, "execution_boundary": "docker-terminal", "image": image, "task_id": request["task_id"], "condition": request["condition"],
                    "errors": errors, "memory_ids": [item["memory_id"] for item in request["agent_context"]["accepted_memories"]], "gate_decisions": request["agent_context"]["decision_log"]}
     (out / "outcome.json").write_text(json.dumps(outcome, indent=2), encoding="utf-8")
+    _capture_model_patch(request["repository_path"], out)
     return outcome

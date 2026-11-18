@@ -1,0 +1,74 @@
+2026-11-17 23:41:32,786 - INFO - Creating container for astropy__astropy-6938...
+2026-11-17 23:41:32,907 - INFO - Container for astropy__astropy-6938 created: 609de43c8ce8b5488eff444958c300c0e71190906e4c8013ef95a06644a543b7
+2026-11-17 23:41:33,125 - INFO - Container for astropy__astropy-6938 started: 609de43c8ce8b5488eff444958c300c0e71190906e4c8013ef95a06644a543b7
+2026-11-17 23:41:33,126 - INFO - Intermediate patch for astropy__astropy-6938 written to logs\run_evaluation\evomem-astropy-6938-validated-20261117\gemini-3.5-flash-lite\astropy__astropy-6938\patch.diff, now applying to container...
+2026-11-17 23:41:33,279 - INFO - Failed to apply patch to container: git apply --verbose
+2026-11-17 23:41:33,886 - INFO - Failed to apply patch to container: git apply --verbose --3way
+2026-11-17 23:41:34,207 - INFO - Failed to apply patch to container: git apply --verbose --reject
+2026-11-17 23:41:34,334 - INFO - >>>>> Applied Patch:
+(Stripping trailing CRs from patch; use --binary to disable.)
+patching file astropy/io/fits/fitsrec.py
+(Stripping trailing CRs from patch; use --binary to disable.)
+patching file astropy/io/fits/tests/test_table.py
+
+2026-11-17 23:41:34,414 - INFO - Git diff before:
+diff --git a/astropy/io/fits/fitsrec.py b/astropy/io/fits/fitsrec.py
+index 574b4073b..de5f93ebd 100755
+--- a/astropy/io/fits/fitsrec.py
++++ b/astropy/io/fits/fitsrec.py
+@@ -1261,7 +1261,7 @@ class FITS_rec(np.recarray):
+ 
+         # Replace exponent separator in floating point numbers
+         if 'D' in format:
+-            output_field.replace(encode_ascii('E'), encode_ascii('D'))
++            output_field[:] = np.char.replace(output_field, encode_ascii('E'), encode_ascii('D'))
+ 
+ 
+ def _get_recarray_field(array, key):
+diff --git a/astropy/io/fits/tests/test_table.py b/astropy/io/fits/tests/test_table.py
+index 67fe21aa7..d2c3ed0c0 100755
+--- a/astropy/io/fits/tests/test_table.py
++++ b/astropy/io/fits/tests/test_table.py
+@@ -2822,6 +2822,17 @@ class TestColumnFunctions(FitsTestCase):
+         c = fits.Column('TEST', 'D', ascii=True)
+         assert c.format == 'D25.17'
+ 
++    def test_d_exponent_format(self):
++        c = fits.Column('TEST', 'D15.7', array=[1.23e-10])
++        hdu = fits.TableHDU.from_columns([c])
++        path = self.temp('test_d_exponent.fits')
++        hdu.writeto(path)
++
++        with open(path, 'rb') as fd:
++            assert b'D-10' in fd.read()
++
++        with fits.open(path) as hdul:
++            assert np.isclose(hdul[1].data['TEST'][0], 1.23e-10)
+     def test_zero_precision_float_column(self):
+         """
+         Regression test for https://github.com/astropy/astropy/issues/3422
+2026-11-17 23:41:34,415 - INFO - Eval script for astropy__astropy-6938 written to logs\run_evaluation\evomem-astropy-6938-validated-20261117\gemini-3.5-flash-lite\astropy__astropy-6938\eval.sh; copying to container...
+2026-11-17 23:42:54,686 - INFO - Test runtime: 80.20 seconds
+2026-11-17 23:42:54,690 - INFO - Test output for astropy__astropy-6938 written to logs\run_evaluation\evomem-astropy-6938-validated-20261117\gemini-3.5-flash-lite\astropy__astropy-6938\test_output.txt
+2026-11-17 23:42:54,751 - INFO - Git diff after:
+diff --git a/astropy/io/fits/fitsrec.py b/astropy/io/fits/fitsrec.py
+index 574b4073b..de5f93ebd 100755
+--- a/astropy/io/fits/fitsrec.py
++++ b/astropy/io/fits/fitsrec.py
+@@ -1261,7 +1261,7 @@ class FITS_rec(np.recarray):
+ 
+         # Replace exponent separator in floating point numbers
+         if 'D' in format:
+-            output_field.replace(encode_ascii('E'), encode_ascii('D'))
++            output_field[:] = np.char.replace(output_field, encode_ascii('E'), encode_ascii('D'))
+ 
+ 
+ def _get_recarray_field(array, key):
+2026-11-17 23:42:54,751 - INFO - Git diff changed after running eval script
+2026-11-17 23:42:54,751 - INFO - Grading answer for astropy__astropy-6938...
+2026-11-17 23:42:54,766 - INFO - report: {'astropy__astropy-6938': {'patch_is_None': False, 'patch_exists': True, 'patch_successfully_applied': True, 'resolved': True, 'infra_failure': False, 'tests_status': {'FAIL_TO_PASS': {'success': ['astropy/io/fits/tests/test_checksum.py::TestChecksumFunctions::test_ascii_table_data', 'astropy/io/fits/tests/test_table.py::TestTableFunctions::test_ascii_table'], 'failure': []}, 'PASS_TO_PASS': {'success': ['astropy/io/fits/tests/test_checksum.py::TestChecksumFunctions::test_sample_file', 'astropy/io/fits/tests/test_checksum.py::TestChecksumFunctions::test_image_create', 'astropy/io/fits/tests/test_checksum.py::TestChecksumFunctions::test_scaled_data', 'astropy/io/fits/tests/test_checksum.py::TestChecksumFunctions::test_scaled_data_auto_rescale', 'astropy/io/fits/tests/test_checksum.py::TestChecksumFunctions::test_uint16_data', 'astropy/io/fits/tests/test_checksum.py::TestChecksumFunctions::test_groups_hdu_data', 'astropy/io/fits/tests/test_checksum.py::TestChecksumFunctions::test_open_with_no_keywords', 'astropy/io/fits/tests/test_checksum.py::TestChecksumFunctions::test_writeto_convenience', 'astropy/io/fits/tests/test_checksum.py::TestChecksumFunctions::test_hdu_writeto', 'astropy/io/fits/tests/test_checksum.py::TestChecksumFunctions::test_datasum_only', 'astropy/io/fits/tests/test_table.py::test_regression_scalar_indexing'], 'failure': []}, 'FAIL_TO_FAIL': {'success': [], 'failure': []}, 'PASS_TO_FAIL': {'success': [], 'failure': []}}}}
+Result for astropy__astropy-6938: resolved: True
+2026-11-17 23:42:54,767 - INFO - Attempting to stop container sweb.eval.astropy__astropy-6938.evomem-astropy-6938-validated-20261117...
+2026-11-17 23:43:10,076 - INFO - Container sweb.eval.astropy__astropy-6938.evomem-astropy-6938-validated-20261117 stopped successfully.
+2026-11-17 23:43:10,076 - INFO - Attempting to remove container sweb.eval.astropy__astropy-6938.evomem-astropy-6938-validated-20261117...
+2026-11-17 23:43:10,230 - INFO - Container sweb.eval.astropy__astropy-6938.evomem-astropy-6938-validated-20261117 removed successfully.

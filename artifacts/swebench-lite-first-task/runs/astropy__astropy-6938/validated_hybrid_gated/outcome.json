@@ -1,0 +1,11 @@
+{
+  "status": "completed",
+  "attempt": 1,
+  "execution_boundary": "docker-terminal",
+  "image": "swebench/sweb.eval.x86_64.astropy_1776_astropy-6938:latest",
+  "event_count": 102,
+  "task_id": "astropy__astropy-6938",
+  "condition": "validated_hybrid_gated",
+  "memory_ids": [],
+  "gate_decisions": []
+}
